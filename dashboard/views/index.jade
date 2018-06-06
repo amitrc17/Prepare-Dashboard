@@ -1,0 +1,16 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    h2(style="text-align: center;") Patient List
+  body
+    div(class="box")
+      ul
+        a(href="/add_user", style="color: green;")
+          li(style="padding: 0.5em;") Add New Patient
+        a(href="/remove_user", style="color: red;")
+          li(style="padding: 0.5em;") Remove Existing Patient
+        each val in content
+          a(href="/dash?p_id=#{val}", style="color: blue;")
+            li(style="padding: 0.5em;") #{val}

@@ -1,0 +1,380 @@
+doctype html
+html
+  head(style="padding=0px;")
+    title=title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src="https://d3js.org/d3.v4.min.js")
+    script(src="https://d3js.org/d3-scale-chromatic.v0.3.min.js")
+  body
+    h2(align="center") Dashboard for Patient - #{p_id}
+    div(class="left", style="width: 10%; border: solid black thin;")
+      h3 Patient List
+      ul
+        a(href="/add_user", style="color: green;")
+          li(style="padding: 0.5em;") Add New Patient
+        a(href="/remove_user", style="color: red;")
+          li(style="padding: 0.5em;") Remove Existing Patient 
+        each val in content
+          a(href="/dash?p_id=#{val}", style="color: blue;")
+            li(style="padding: 0.5em;") #{val}
+    div(class="right")
+      div(class="boxupper")
+        div(class="right")
+          p Click On Days Within the Calender to Show Details Here.
+      div(class="boxlower")
+        script.
+          const W = 600;
+          const H = 350;
+          const WU = 600;
+          const HU = 500;
+          const cellSize = 50;
+          const shift_up = cellSize;
+          const monthname = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+          let X = d3.scaleTime().range([30, 500-30]);
+          let Y = d3.scaleLinear().range([300, 30]);
+          let color = d3.scaleOrdinal().domain([0, 1, 2]).range(['darkgreen', 'orange', 'crimson']);
+          let cal_color = d3.scaleSequential(d3.interpolateBlues);
+
+          let day = d3.timeFormat("%w"), // day of the week
+              day_of_month = d3.timeFormat("%e") // day of the month
+              day_of_year = d3.timeFormat("%j")
+              week = d3.timeFormat("%U"), // week number of the year
+              month = d3.timeFormat("%m"), // month number
+              year = d3.timeFormat("%Y"),
+              percent = d3.format(".1%"),
+              format = d3.timeFormat("%Y-%m-%d");
+
+          let stack = d3.stack();
+
+          let svglower = d3.select('.boxlower').insert('div', ':first-child').attr('class', 'left').append('svg')
+            .attr('width', W+15)
+            .attr('height', H);
+          let glower = svglower.append('g').attr('transform', 'translate(30,30)');
+
+          let svgupper = d3.select('.boxupper').insert('div', ':first-child').attr('class', 'left').append('svg')
+            .attr('width', WU)
+            .attr('height', HU);
+          let gupper = svgupper;//.append('g').attr('transform', 'translate(' + W/2 + ',' + H/2 + ')');
+
+          let counts = {};
+
+          let get_xx = (d) => {
+                let month_padding = 30;
+                return day(d) * cellSize + month_padding; 
+              };
+          
+          let get_yy = (d) => { 
+                let week_diff = week(d) - week(new Date(year(d), month(d)-1, 1) );
+                return (week_diff*cellSize) + shift_up;
+              };
+          
+          let add_button = (xx, yy, w, h, t, onclick) => {
+            gupper
+              .append('rect')
+                .attr('class', 'next button')
+                .attr('width', w)
+                .attr('height', h)
+                .attr('x', xx)
+                .attr('y', yy)
+                .attr('fill', 'lightgray')
+                .style('stroke', 'black')
+                .on('click', onclick);
+            
+            gupper
+              .append('g')
+                .attr('transform', 'translate(' + (xx+15) + ',' + (yy+15) + ')')
+                .append('text')
+                  .text(t)
+                  .attr('color', 'white')
+                  .on('click', onclick);
+              
+          };
+
+          let showcalendar = (datetoplot) => {
+            gupper.selectAll('g').remove();
+            gupper.selectAll('rect').remove();
+            let daystoprint = d3.timeDays(datetoplot, new Date(year(datetoplot), month(datetoplot), 1));
+
+            let cal_month = gupper.append('g')
+              .attr('transform', 'translate(150,30)')
+              .append('text')
+                .text(monthname[month(datetoplot)-1] + ' ' + year(datetoplot))
+                .style('font-weight', 'bold');
+
+
+            add_button(270, 15, 100, 20, 'Next Month', () => {
+              showcalendar(new Date(year(datetoplot), month(datetoplot), 1));
+            });
+            add_button(30, 15, 100, 20, 'Prev Month', () => {
+              showcalendar(new Date(year(datetoplot), month(datetoplot) - 2, 1));
+            });
+
+            let rect = gupper.selectAll(".day")
+              .data(daystoprint)
+              .enter().append('rect')
+                .attr('class', 'day')
+                .attr('width', cellSize)
+                .attr('height', cellSize)
+                .attr('x', get_xx)
+                .attr('y', get_yy);
+
+            let oncalclick = (d) => {
+              let htmltext = '<h2>' + ' Intake Information</h2>';
+                htmltext += '<h3>' +  d.toDateString() + '</h3>';
+                let cur_date = format(d);
+                if(cur_date in counts) {
+                  htmltext += '<table>';
+                  for(let i=0;i<counts[cur_date]['times'].length; i++) {
+                    htmltext += '<tr><td style="font-weight: bold;">' + counts[cur_date]['times'][i].name + '</td>' + '<td>' + counts[cur_date]['times'][i].time + '</tr>';
+                  }
+                  htmltext += '</table>'
+                }
+                d3.select('.boxupper').select('.right').remove();
+                d3.select('.boxupper').append('div')
+                  .attr('class', 'right')
+                  .html(htmltext)
+            }; 
+
+            let cal_days = gupper.selectAll('.cal-days')
+              .data(daystoprint)
+              .enter().append('g')
+                .attr('transform', (d) => {
+                  let xx = get_xx(d);
+                  let yy = get_yy(d);
+                  return 'translate(' + (xx+5) + ',' + (yy+10) + ')';
+                })
+                .append('text')
+                .attr('dy', '0.35em')
+                .text((d) => {
+                  return d.getDate();
+                })
+                .style('font-size', '18px')
+                .style('fill', 'white')
+                .on('click', oncalclick);
+            // tabbed, no seconds, separated, move clock to AM/PM
+            rect.on('click', oncalclick);
+
+            rect.filter((d) => {
+              return format(d) in counts;
+            }).style('fill', (d) => {
+              return cal_color(counts[format(d)][0]*0.75 + 0.25);
+            });
+          };
+          
+          d3.json('/get_calendar_data')
+            .header('Patient-Id', '#{p_id}')
+            .get((err, data) => {
+              
+              let intakes = data.intakes;
+              let medlist = data.medicines;
+              let dosages = data.dosages;
+              let writeTime = (dd) => {
+                let dstring = dd.toLocaleTimeString();
+                let ret = dstring.slice(0, dstring.lastIndexOf(':')) + dstring.slice(-2);
+                return ret;
+              }; 
+
+              let med_name = {};
+              for(i=0;i<medlist.length; i++) {
+                med_name[medlist[i].id] = medlist[i].name;
+              }
+              for(i=0;i<intakes.length;i++) {
+                let cur_date =  format(new Date(intakes[i].planned_date_time));
+                let bn = intakes[i].intake_status;
+                let status_string = 'On-Time';
+                if(bn == 1 || bn == 2) {
+                  if(bn == 1) {
+                    status_string = 'Early';
+                  } else {
+                    status_string = 'Late';
+                  }
+                  bn = 1
+                } else if(bn == 3) {
+                  bn = 2
+                }
+                if (cur_date in counts) {
+                  counts[cur_date][bn] += 1;
+                } else {
+                  counts[cur_date] = {date:new Date(cur_date), 0:0, 1:0, 2:0, times: []};
+                  counts[cur_date][bn] += 1;
+                }
+                if(bn != 2) {
+                  counts[cur_date]['times'].push({
+                    name: med_name[intakes[i].medicine_id], 
+                    time: writeTime(new Date(intakes[i].actual_date_time)) + '</td><td> [' + status_string + ']</td>'
+                  });
+                } else {
+                  counts[cur_date]['times'].push({
+                    name: med_name[intakes[i].medicine_id], 
+                    time: '</td> <td>[Missing]</td>'
+                  });
+                }
+              }
+              intakes = [];
+              for(let cur_date in counts) {
+                tot = counts[cur_date][0] + counts[cur_date][1] + counts[cur_date][2];
+                counts[cur_date][0] /= tot;
+                counts[cur_date][1] /= tot;
+                counts[cur_date][2] /= tot;
+                intakes.push(counts[cur_date]);
+              }
+
+              let dosageInfoHtml = '<h2>Dosage Schedule</h2><br>';
+              for(let i=0; i<dosages.length; i++) {
+                dosageInfoHtml = dosageInfoHtml + '<b>' + med_name[dosages[i].medicine_id] + '</b> : ';
+                for(let j=0; j<dosages[i].days.length; j++) {
+                  if(j == 0) {
+                    tmp = dosages[i].days[j][0] + dosages[i].days[j][1];
+                  } else {
+                    tmp = ', ' + dosages[i].days[j][0] + dosages[i].days[j][1];
+                  }
+                  dosageInfoHtml = dosageInfoHtml + tmp;
+                }
+                dosageInfoHtml = dosageInfoHtml + '  ';
+                for(let j=0; j<dosages[i].times.length; j++) {
+                  if(j == 0) {
+                    tmp = dosages[i].times[j];
+                  } else {
+                    tmp = ', ' + dosages[i].times[j];
+                  }
+                  dosageInfoHtml = dosageInfoHtml + tmp;
+                }
+                dosageInfoHtml = dosageInfoHtml + 
+                  '<br><button type="button" onclick="location.href=\'update_dosage?m_id=' + 
+                  dosages[i].medicine_id + '&m_name=' + med_name[dosages[i].medicine_id] +
+                  '&p_id=#{p_id}' +
+                  '\'">Update Dosage Times</button>';
+                dosageInfoHtml = dosageInfoHtml +
+                  '  <button type="button" onclick="location.href=\'remove_med?m_id=' + 
+                  dosages[i].medicine_id + '&m_name=' + med_name[dosages[i].medicine_id] +
+                  '&p_id=#{p_id}' +
+                  '\'">Remove Medication</button>';
+                dosageInfoHtml  = dosageInfoHtml + '<br><br><br>';
+              }
+              dosageInfoHtml = dosageInfoHtml + 
+                '<button type="button" onclick="location.href=\'add_med?p_id=#{p_id}\'"> Add Medication</button>';
+
+              d3.select('.boxlower').append('div')
+                .attr('class', 'right')
+                .append('p')
+                  .html(dosageInfoHtml);
+
+              intakes.sort((a, b) => {
+                if (a.date > b.date) {
+                  return 1;
+                } else if (a.date < b.date) {
+                  return -1;
+                }
+                return 0;
+              });
+              let new_intakes = [];
+              let num_dd = 0;
+              let cur_week = intakes;
+
+              for(let i=0;i<intakes.length;i++) {
+                let dd = intakes[i].date;
+                if(dd.getDay() == 0 || i == 0) { 
+                  if(i != 0) {
+                    cur_week[0] /= num_dd;
+                    cur_week[1] /= num_dd;
+                    cur_week[2] /= num_dd;
+                    new_intakes.push(cur_week);
+                  }
+                  num_dd = 1;
+                  cur_week = intakes[i];
+                } else {
+                  num_dd += 1;
+                  cur_week[0] += intakes[i][0];
+                  cur_week[1] += intakes[i][1];
+                  cur_week[2] += intakes[i][2];
+                }
+              }
+              if(num_dd > 0) {
+                cur_week[0] /= num_dd;
+                cur_week[1] /= num_dd;
+                cur_week[2] /= num_dd;
+                new_intakes.push(cur_week);
+              }
+              X.domain(d3.extent(new_intakes, (d) => {return d.date; }));
+
+              let keys = [0, 1, 2];
+              color.domain(keys);
+              stack.keys(keys);
+
+              let layers = glower.selectAll('.layer')
+                .data(stack(new_intakes))
+                .enter().append('g')
+                  .attr('class', 'layer');
+              
+              layers.append('path')
+                .attr('class', 'area')
+                .style('fill', (d) => {return color(d.key);})
+                .attr('d', d3.area()
+                  .x( (d) => { return X(d.data.date); })
+                  .y0( (d) => { return Y(d[0]); })
+                  .y1( (d) => { return Y(d[1]); })
+                );
+
+              glower.append('g')
+                .attr('class', 'axis axis--x')
+                .attr('transform', 'translate(0,' + (H-50) + ')')
+                .call(d3.axisBottom(X).ticks(5));
+
+              glower.append('g')
+                .attr('class', 'axis axis--y')
+                .attr('transform', 'translate(30,0)')
+                .call(d3.axisLeft(Y).ticks(10, "%"));
+              
+              glower.append('g')
+                .attr('class', 'legend')
+                //.attr('transform', 'translate(100, 50)')
+                .selectAll('.legendkey')
+                  .data(color.range())
+                  .enter().append('rect')
+                    .attr('class', 'legendkey')
+                    .attr('x', 480)
+                    .attr('y', (d, i) => {
+                      return 70 + (3-i)*(30);
+                    })
+                    .attr('width', 20)
+                    .attr('height', 20)
+                    .attr('fill', (d) => {
+                      return d;
+                    });
+              
+              glower.append('g')
+                .attr('class', 'legendtexts')
+                .selectAll('.legendtext')
+                  .data(color.range())
+                  .enter().append('text')
+                    .attr('class', '.legendtext')
+                    .text((d, i) => {
+                      if(i == 0) {
+                        return 'On-Time';
+                      } else if (i == 1) {
+                        return 'Early/Late';
+                      } else {
+                        return 'Missed';
+                      }
+                    })
+                    .attr('x', 505)
+                    .attr('y', (d,i) => {
+                      return 80 + (3-i)*30;
+                    })
+                    .attr('dy', '0.35em');
+              
+              glower.append('text')
+                .attr('class', 'title')
+                .text('Adherence Summary')
+                .attr('x', 50)
+                .attr('y', 0)
+                .style('font-weight', 'bold')
+                .style('font-size', '20px');
+
+              //console.log(counts);
+              showcalendar(new Date(2018, new Date().getMonth(), 1));
+            });
+      
+
+      

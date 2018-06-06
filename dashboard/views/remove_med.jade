@@ -1,0 +1,43 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src="https://d3js.org/d3.v4.min.js")
+  body
+    h2(style="text-align: center;") Remove Medication
+    form(name="removeform")
+      div(class="medbox")
+        <h3 style="text-align: center"> Medication Info</h3>
+        p Participant ID:
+          input(type="text", name="p_id", value="#{p_id}", disabled)
+        div(class="meds")
+          p Medication Name:
+            input(type="text", name="med_name_1", value="#{m_name}", disabled)
+    p
+    div(style="text-align: center;")
+      input(type="submit", value="Submit", onclick="onSubmit()")
+      input(type="submit", value="Cancel", onclick="cancel()")
+    script.
+      let onSubmit = () => {
+        let requestJson = {};
+        requestJson['med_id'] = #{m_id};
+        console.log(requestJson);
+        fetch('/remove_med/rem', {
+          method: 'POST',
+          body: JSON.stringify(requestJson),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then( (res) => {
+          if(res.status != 200) {
+            window.alert('Deletion Failed!');
+          } else {
+            window.alert('Deletion Success!');
+          }
+          window.location.replace('dash?p_id=' + #{p_id});
+        });
+      };
+      let cancel = () => {
+        window.location.replace('dash?p_id=' + #{p_id});
+      };

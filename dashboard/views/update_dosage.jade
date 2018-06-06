@@ -1,0 +1,174 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src="https://d3js.org/d3.v4.min.js")
+  body
+    h2(style="text-align: center;") Update Dosage Info
+    form(name="update_dosage")
+      div(class="medbox")
+        <h3 style="text-align: center"> Patient Info</h3>
+        p Participant ID:
+          input(type="text", name="p_id", value="#{p_id}", disabled)
+      div(class="meds")
+        div(class="medbox") <br><h3 style="text-align:center;">Medication</h3>
+          p Name:
+          input(type="text", name="med_name_1", value="#{m_name}", disabled)
+          span(class="days1") <h4>Days</h4>
+            label ALL
+            input(type="checkbox", name="days1ALL", style="margin-right:3.5em;")
+            label Monday
+            input(type="checkbox", name="days1Monday", style="margin-right:3.5em;")
+            label Tuesday
+            input(type="checkbox", name="days1Tuesday", style="margin-right:3.5em;")
+            label Wednesday
+            input(type="checkbox", name="days1Wednesday", style="margin-right:3.5em;")
+            label Thrusday
+            input(type="checkbox", name="days1Thursday", style="margin-right:3.5em;")
+            label Friday
+            input(type="checkbox", name="days1Friday", style="margin-right:3.5em;")
+            label Saturday
+            input(type="checkbox", name="days1Saturday", style="margin-right:3.5em;")
+            label Sunday
+            input(type="checkbox", name="days1Sunday", style="margin-right:3.5em;")
+          span(class="times1") <h4>Times</h4>
+            input(type="time", name="times1time1")
+            input(type="button", value="Add More Dosages", id="time_add", class="1")
+    p
+    div(style="text-align: center;")
+      input(type="submit", value="Submit", onclick="onSubmit()")
+      input(type="submit", value="Cancel", onclick="cancel()")
+    script.
+      let onSubmit = () => {
+        //window.alert(document.getElementsByName('days1Monday')[0].checked);
+        let requestJson = {'med_names': [], 'dosages': []};
+        let weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        for(let i=1;i <= 10; i+=1) {
+          let medNameKey = 'med_name_' + i;
+          let medNameInput = document.getElementsByName(medNameKey);
+          if(medNameInput.length == 0) {
+            break;
+          }
+          requestJson['med_names'].push(medNameInput[0].value);
+
+
+          let dosage = {'times': [], 'days': []};
+          let allDaysCheckbox = document.getElementsByName('days' + i + 'ALL')[0];
+          if(allDaysCheckbox.checked) {
+            dosage['days'] = [].concat(weekDays);
+          } else {
+            weekDays.forEach( (day) => {
+              console.log(day);
+              let dayCheckbox = document.getElementsByName('days' + i + day)[0];
+              if(dayCheckbox.checked) {
+                dosage['days'].push(day);
+              }
+            });
+          }
+          if(dosage['days'].length == 0) {
+            window.alert('Please Tick at least one Day for Medication - #{m_name}');
+            return;
+          }
+
+          let timeKeyBase = 'times' + i + 'time';
+          for(let j=1;j <= 10; j+= 1) {
+            let timeKey = timeKeyBase + j;
+            let timeInput = document.getElementsByName(timeKey);
+            if(timeInput.length == 0) {
+              break;
+            }
+            if(timeInput[0].value.length == 0) {
+              window.alert('Please fill times for all dosages of Medication - #{m_name}');
+              return;
+            }
+            dosage['times'].push(timeInput[0].value);
+          }
+          requestJson['dosages'].push(dosage);
+        }
+        requestJson['med_id'] = #{m_id};
+        console.log(requestJson);
+        fetch('/post_update_dosage', {
+          method: 'POST',
+          body: JSON.stringify(requestJson),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then( (res) => {
+          if(res.status != 201) {
+            window.alert('Update Failed! Error = ', res.body);
+          } else {
+            window.alert('Update Success!');
+          }
+          window.location.replace('dash?p_id=#{p_id}');
+        });
+      };
+      let cancel = () => {
+        window.location.replace('dash?p_id=#{p_id}');
+      };
+    script.
+      let dayList = ['ALL', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      let add_meds = () => {
+        let val = parseInt(d3.select('#med_add').attr('class'));
+        d3.select('#med_add').remove();
+        let meds = d3.select('.meds');
+        meds.append('p')
+          .html('<h3>Medication<h3>');
+        meds.append('p')
+          .html('Name: ');
+        meds.append('input')
+          .attr('type', 'text')
+          .attr('name', 'med_name_' + (val+1));
+        days = meds.append('span')
+          .attr('class', 'days' + (val+1))
+          .html('<h4>Days</h4>');
+        dayList.forEach(day => {
+          days.append('label').html(day);
+          days.append('input')
+            .attr('type', 'checkbox')
+            .attr('name', 'days' + (val+1) + day)
+            .style('margin-right', '3.5em');
+        });
+        times = meds.append('span')
+          .attr('class', 'times'+(val+1))
+          .html('<h4>Times</h4>');
+        times.append('input')
+          .attr('type', 'time')
+          .attr('name', 'times' + (val+1) + 'time1');
+        times.append('input')
+          .attr('type', 'button')
+          .attr('value', 'Add More Dosages')
+          .attr('id', 'time_add')
+          .attr('class', '1')
+          .on('click', add_times);
+        meds.append('p');
+        meds.append('input')
+          .attr('type', 'button')
+          .attr('value', 'Add More Medications')
+          .attr('id', 'med_add')
+          .attr('class', val+1)
+          .on('click', add_meds);
+      };
+
+      let add_times = () => {
+        let ele = d3.event.target;
+        let val = parseInt(ele.attributes['class'].value);
+        let parent_class = ele.parentNode.attributes['class'].value;
+        console.log(parent_class);
+        ele = d3.select('.' + parent_class);
+        ele.select('#time_add').remove();
+        ele.append('input')
+          .attr('type', 'time')
+          .attr('name', parent_class + 'time'+ (val+1));
+        ele.append('input')
+          .attr('id', 'time_add')
+          .attr('type', 'button')
+          .attr('value', 'Add More Dosages')
+          .attr('class', (val+1))
+          .on('click', add_times);
+      }
+
+      d3.select('#med_add')
+        .on('click', add_meds);
+      d3.select('#time_add')
+        .on('click', add_times);

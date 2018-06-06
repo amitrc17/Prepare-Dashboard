@@ -1,0 +1,66 @@
+body {
+  padding: 0px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color: lightgray;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.medbox {
+  width: 70%;
+  margin: auto;
+  padding: 20px;
+  outline: solid black thin;
+  background-color: white;
+  font-weight: bold;
+}
+
+.boxlower {
+  width: 80%;
+  margin: auto;
+  height: 400px;
+  border: solid black thin;
+  background-color: white;
+}
+
+.box {
+  width: 30%;
+  margin: auto;
+  outline: solid black thin;
+}
+
+.boxmain {
+  width: 100%;
+  margin: auto;
+}
+
+.boxupper {
+  width: 80%;
+  margin: auto;
+  height: 370px;
+  border: solid black thin;
+  background-color: white;
+}
+
+.left {
+  float: left;
+  width: 60%;
+  overflow: hidden;
+  padding: 10px;
+  height: 100%;
+}
+.right {
+  padding: 10px;
+  overflow: hidden;
+  height: 100%;
+}
+.day {
+  fill: #c8cacd;
+  stroke: gray;
+}
+
+th, td {
+  padding: 2px;
+}

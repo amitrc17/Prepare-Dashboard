@@ -1,0 +1,44 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    h2(style="text-align: center;") Remove Patient
+    form(id='form1')
+      div(class="medbox", style="width: 30%")
+        p Participant ID:
+          input(type="text", name="p_id")
+    p
+    div(style="text-align: center;")
+      input(type="submit", value="Submit", onclick="onSubmit()")
+      input(type="submit", value="Cancel", onclick="cancel()")
+    script.
+      let onSubmit = () => {
+        let p_id = document.getElementsByName('p_id')[0].value;
+        if(p_id == undefined || p_id.length == 0) {
+          window.alert('Patient-Id is required')
+          return;
+        }
+        let requestJson = {'p_id': p_id};
+        fetch('/post_remove', {
+          method: 'POST',
+          body: JSON.stringify(requestJson),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then( (res) => {
+          console.log(res.status);
+          if(res.status != 200) {
+            window.alert('Remove Failed!');
+          } else {
+            window.alert('Remove Success!');
+          }
+          window.location.replace('/');
+        })
+      };
+      let cancel = () => {
+        window.location.replace('/');
+      };
+
+      
