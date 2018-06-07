@@ -21,7 +21,7 @@ html
           return;
         }
         let requestJson = {'p_id': p_id};
-        fetch('/post_remove', {
+        fetch('/post_remove?user=' + '#{auth_user}', {
           method: 'POST',
           body: JSON.stringify(requestJson),
           headers: {
@@ -34,11 +34,11 @@ html
           } else {
             window.alert('Remove Success!');
           }
-          window.location.replace('/');
+          window.location.replace('list?user=' + '#{auth_user}');
         })
       };
       let cancel = () => {
-        window.location.replace('/');
+        window.location.replace('list?user=' + '#{auth_user}');
       };
 
       

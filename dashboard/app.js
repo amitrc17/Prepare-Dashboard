@@ -15,6 +15,7 @@ var postRemoveRouter = require('./routes/post_remove');
 var getCalendarDataRouter = require('./routes/get_calendar_data');
 var removeMedRouter = require('./routes/remove_med');
 var addMedRouter = require('./routes/add_med');
+var listRouter = require('./routes/list');
 
 var app = express();
 
@@ -40,6 +41,7 @@ app.use('/post_remove', postRemoveRouter);
 app.use('/get_calendar_data', getCalendarDataRouter);
 app.use('/remove_med', removeMedRouter);
 app.use('/add_med', addMedRouter);
+app.use('/list', listRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -23,7 +23,7 @@ html
         let requestJson = {};
         requestJson['med_id'] = #{m_id};
         console.log(requestJson);
-        fetch('/remove_med/rem', {
+        fetch('/remove_med/rem?user=' + '#{auth_user}', {
           method: 'POST',
           body: JSON.stringify(requestJson),
           headers: {
@@ -35,9 +35,9 @@ html
           } else {
             window.alert('Deletion Success!');
           }
-          window.location.replace('dash?p_id=' + #{p_id});
+          window.location.replace('dash?p_id=' + #{p_id} + '&user=' + '#{auth_user}');
         });
       };
       let cancel = () => {
-        window.location.replace('dash?p_id=' + #{p_id});
+        window.location.replace('dash?p_id=' + #{p_id} + '&user=' + '#{auth_user}');
       };

@@ -102,7 +102,7 @@ html
         requestJson['u_id'] = user_id;
         requestJson['p_id'] = patient_id;
         console.log(requestJson);
-        fetch('/post_add', {
+        fetch('/post_add?user=' + '#{auth_user}', {
           method: 'POST',
           body: JSON.stringify(requestJson),
           headers: {
@@ -114,11 +114,11 @@ html
           } else {
             window.alert('Update Success!');
           }
-          window.location.replace('dash?p_id=' + patient_id);
+          window.location.replace('dash?p_id=' + patient_id + '&user=' + '#{auth_user}');
         });
       }
       let cancel = () => {
-        window.location.replace('/');
+        window.location.replace('list?user=' + '#{auth_user}');
       };
     script.
       let dayList = ['ALL', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

@@ -5,7 +5,7 @@ var router = express.Router();
 /* GET users listing. */
 router.post('/', function(req, res, next) {
   console.log(req.body);
-  fetch('http://localhost:5000/remove_user', {
+  fetch('http://localhost:5000/remove_user?user=' + req.query['user'], {
     method: 'POST',
     body: JSON.stringify(req.body),
     headers: {

@@ -4,7 +4,7 @@ var router = express.Router();
 
 router.get('/', function(req, res, next) {
   console.log(req.get('Patient-Id'));
-  fetch('http://localhost:5000/get_medicine_data', {
+  fetch('http://localhost:5000/get_medicine_data?user=' + req.query['user'], {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

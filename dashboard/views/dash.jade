@@ -10,12 +10,12 @@ html
     div(class="left", style="width: 10%; border: solid black thin;")
       h3 Patient List
       ul
-        a(href="/add_user", style="color: green;")
+        a(href="/add_user?user=#{auth_user}", style="color: green;")
           li(style="padding: 0.5em;") Add New Patient
-        a(href="/remove_user", style="color: red;")
+        a(href="/remove_user?user=#{auth_user}", style="color: red;")
           li(style="padding: 0.5em;") Remove Existing Patient 
         each val in content
-          a(href="/dash?p_id=#{val}", style="color: blue;")
+          a(href="/dash?p_id=#{val}&user=#{auth_user}", style="color: blue;")
             li(style="padding: 0.5em;") #{val}
     div(class="right")
       div(class="boxupper")
@@ -162,7 +162,7 @@ html
             });
           };
           
-          d3.json('/get_calendar_data')
+          d3.json('/get_calendar_data?user=' + '#{auth_user}')
             .header('Patient-Id', '#{p_id}')
             .get((err, data) => {
               
@@ -243,17 +243,17 @@ html
                 dosageInfoHtml = dosageInfoHtml + 
                   '<br><button type="button" onclick="location.href=\'update_dosage?m_id=' + 
                   dosages[i].medicine_id + '&m_name=' + med_name[dosages[i].medicine_id] +
-                  '&p_id=#{p_id}' +
+                  '&p_id=#{p_id}&user=#{auth_user}' +
                   '\'">Update Dosage Times</button>';
                 dosageInfoHtml = dosageInfoHtml +
                   '  <button type="button" onclick="location.href=\'remove_med?m_id=' + 
                   dosages[i].medicine_id + '&m_name=' + med_name[dosages[i].medicine_id] +
-                  '&p_id=#{p_id}' +
+                  '&p_id=#{p_id}&user=#{auth_user}' +
                   '\'">Remove Medication</button>';
                 dosageInfoHtml  = dosageInfoHtml + '<br><br><br>';
               }
               dosageInfoHtml = dosageInfoHtml + 
-                '<button type="button" onclick="location.href=\'add_med?p_id=#{p_id}\'"> Add Medication</button>';
+                '<button type="button" onclick="location.href=\'add_med?p_id=#{p_id}&user=#{auth_user}\'"> Add Medication</button>';
 
               d3.select('.boxlower').append('div')
                 .attr('class', 'right')
